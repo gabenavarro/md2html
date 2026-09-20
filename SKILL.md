@@ -95,8 +95,8 @@ node <skill-dir>/bin/md2html.mjs <report.md>
 # outputs <report>.html next to the .md (+ xy-out/ when XY charts present)
 ```
 
-Flags: `--out path`, `--theme auto|light|dark`, `--python <path>`, `--no-check` (skip the Mermaid gate).
-Directory argument renders every `*.md` in it.
+Flags: `--out path`, `--theme auto|light|dark`, `--python <path>`, `--no-check` (skip the Mermaid gate), `--open` (open rendered reports in the default browser).
+Directory argument renders every `*.md` in it. Local images (≤8 MB) are inlined as data URIs so the `.html` stays self-contained after being copied; remote URLs pass through.
 
 ## Subagent orchestration (high-quality reports)
 

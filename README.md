@@ -11,6 +11,8 @@ HTML is a derived, human-facing render with:
 - **XY** interactive charts ([reflex-dev/xy](https://github.com/reflex-dev/xy)) —
   pan/zoom/selection, embedded as theme-synced iframe variants
 - GFM tables, alerts, task lists; auto TOC; light/dark theme toggle
+- **Self-contained by default** — local images inlined, math fonts inlined,
+  diagram bundle inlined; a copied `.html` renders identically off-network
 - Output is a single `.html` file (+ `xy-out/` chart files when charts present)
 
 ## Install (any machine, any harness)
@@ -32,9 +34,8 @@ to actionable error messages.
 ## Usage
 
 ```bash
-node bin/md2html.mjs report.md            # -> report.html
-node bin/md2html.mjs reports/             # render every *.md in a directory
 node bin/md2html.mjs report.md --out out.html --theme dark
+node bin/md2html.mjs report.md --open          # render and open in browser
 node bin/md2html.mjs report.md --no-check        # skip the Mermaid syntax gate
 ```
 
@@ -153,7 +154,7 @@ test/render.test.mjs     node --test suite
 ## Development
 
 ```bash
-npm test                 # 13 tests
+npm test                 # 17 tests
 ```
 
 ## License

@@ -145,8 +145,9 @@ Renders as a left-accent blockquote.
 ## Images
 
 `![](path.png)` — relative to the Markdown file. Rendered with rounded
-corners and border. (The HTML file itself is self-contained; images are
-referenced, not inlined.)
+corners and border. Local files (png/jpg/gif/svg/webp/avif/bmp, ≤8 MB) are
+**inlined as data: URIs** so the report stays self-contained when copied
+or moved. Remote URLs (`http(s)://`) pass through unchanged.
 
 ## What the renderer does NOT do
 

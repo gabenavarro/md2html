@@ -8,8 +8,13 @@
 <script>
 (function () {
   try {
+    var forced = document.documentElement.getAttribute("data-theme");
     var t = localStorage.getItem("md2html-theme");
-    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    if (!t) {
+      t = (forced && forced !== "auto")
+        ? forced
+        : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    }
     document.documentElement.classList.add(t);
   } catch (e) {}
 })();

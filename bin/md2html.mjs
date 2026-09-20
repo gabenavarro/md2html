@@ -12,6 +12,7 @@
  *   --theme <auto|light|dark>  force theme (default: auto -> prefers-color-scheme)
  *   --python <path>     python interpreter with `xy` installed (default: ./.venv/bin/python)
  *   --no-check          skip the build-time Mermaid syntax gate
+ *   --open              open each rendered report in the default browser
  *
  * XY charts: fenced ```xy blocks are extracted to xy-src/, rendered via
  * scripts/xy-export.py into xy-out/ (light + dark standalone HTML), and
@@ -19,6 +20,7 @@
  */
 
 import { existsSync, readdirSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
 import { render } from "../lib/render.mjs";
@@ -27,7 +29,7 @@ function usage() {
   console.log(`md2html — Markdown reports -> self-contained HTML
 
 Usage:
-  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check]`);
+  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check] [--open]`);
   process.exit(1);
 }
 
@@ -35,13 +37,14 @@ const args = process.argv.slice(2);
 if (args.includes("--help") || args.includes("-h") || args.length === 0) usage();
 
 const inputs = [];
-let out, theme, python; let noCheck = false;
+let out, theme, python; let noCheck = false, open = false;
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--out") out = resolve(args[++i]);
   else if (a === "--theme") theme = args[++i];
   else if (a === "--python") python = args[++i];
   else if (a === "--no-check") noCheck = true;
+  else if (a === "--open") open = true;
   else if (a.startsWith("--")) { console.error(`unknown flag: ${a}`); usage(); }
   else inputs.push(resolve(a));
 }
@@ -79,6 +82,20 @@ for (const f of files) {
   } catch (e) {
     failed++;
     console.error(`md2html: ${f}\n  ${e.message}`);
+  }
+}
+function browserOpen(path) {
+  try {
+    const cmd = process.platform === "darwin" ? "open"
+      : process.platform === "win32" ? "cmd" : "xdg-open";
+    const args = process.platform === "win32" ? ["/c", "start", "", path] : [path];
+    execFileSync(cmd, args, { stdio: "ignore" });
+  } catch { /* non-fatal: render still succeeded */ }
+}
+if (open) {
+  for (const f of files) {
+    const htmlPath = out && files.length === 1 ? out : f.replace(/\.md$/, "") + ".html";
+    if (existsSync(htmlPath)) browserOpen(htmlPath);
   }
 }
 process.exit(failed ? 1 : 0);

@@ -164,4 +164,52 @@ test("offline/file-safe: no module scripts, mermaid bundle inlined", async () =>
   assert.ok(!r.html.includes("cdn.jsdelivr.net"), "zero external references");
 });
 
+test("Images: local inlined as data URI, remote untouched, missing kept", async () => {
+  // minimal valid 1x1 PNG
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  writeFileSync(join(dir, "dot.png"), png);
+  const p = writeReport("img.md", `# T\n\n## A\n\n## B\n\n## C\n\n![local](dot.png)\n\n![remote](https://example.com/x.png)\n\n![missing](nope.png)\n`);
+  const r = await render(p);
+  assert.ok(/src="data:image\/png;base64,/.test(r.html), "local image inlined");
+  assert.ok(r.html.includes('src="https://example.com/x.png"'), "remote untouched");
+  assert.ok(r.html.includes('src="nope.png"'), "missing image keeps relative ref");
+});
+
+test("Forced theme honored over system preference", async () => {
+  const { JSDOM } = await import("jsdom");
+  const p = writeReport("theme.md", `# T\n\n## A\n\n## B\n\n## C\n\ntext\n`);
+  const light = (await render(p, { theme: "light" })).html;
+  const auto = (await render(p, { theme: "auto" })).html;
+  const mk = (html, stored) => {
+    const dom = new JSDOM(html, {
+      url: "http://localhost/",
+      runScripts: "dangerously",
+      beforeParse(window) {
+        window.matchMedia = () => ({ matches: true }); // system = dark
+        if (stored) window.localStorage.setItem("md2html-theme", stored);
+        window.mermaid = { initialize() {}, run: () => Promise.resolve(), parse: () => Promise.resolve() };
+      },
+    });
+    return new Promise((res) => setTimeout(() => res(dom.window.document.documentElement.className), 50));
+  };
+  assert.equal(await mk(light, null), "light", "forced light beats dark system pref");
+  assert.equal(await mk(auto, null), "dark", "auto follows dark system pref");
+  assert.equal(await mk(auto, "light"), "light", "stored user choice wins over system");
+});
+
+test("XY failure: named chart + traceback tail, not raw command", async () => {
+  const p = writeReport("xy-fail.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`xy\nimport xy\nchart = xy.does_not_exist()\n\`\`\`\n`);
+  await assert.rejects(
+    () => render(p),
+    (e) =>
+      /XY chart render failed \(xy-src\/[A-Za-z0-9-]+\.py\)/.test(e.message) &&
+      /render_one|does_not_exist|AttributeError/.test(e.message) &&
+      !/--manifest/.test(e.message),
+    "surfaces chart name + traceback, hides subprocess plumbing",
+  );
+});
+
 process.on("exit", () => rmSync(dir, { recursive: true, force: true }));
