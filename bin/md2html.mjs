@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+/**
+ * md2html — render agent-authored Markdown reports into vibrant, self-contained HTML.
+ *
+ * Usage:
+ *   md2html <report.md> [more.md ...]
+ *   md2html <report.md> --out report.html
+ *   md2html <dir>            # renders every *.md in a directory
+ *
+ * Options:
+ *   --out <path>        output path (single input only)
+ *   --theme <auto|light|dark>  force theme (default: auto -> prefers-color-scheme)
+ *   --python <path>     python interpreter with `xy` installed (default: ./.venv/bin/python)
+ *   --keep-xy-src       keep generated xy-src/*.py files (default: keep)
+ *
+ * XY charts: fenced ```xy blocks are extracted to xy-src/, rendered via
+ * scripts/xy-export.py into xy-out/ (light + dark standalone HTML), and
+ * embedded as iframes whose src swaps with the active theme.
+ */
+
+import { existsSync, readdirSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
+
+import { render } from "../lib/render.mjs";
+
+function usage() {
+  console.log(`md2html — Markdown reports -> self-contained HTML
+
+Usage:
+  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path]`);
+  process.exit(1);
+}
+
+const args = process.argv.slice(2);
+if (args.includes("--help") || args.includes("-h") || args.length === 0) usage();
+
+const inputs = [];
+let out, theme, python;
+for (let i = 0; i < args.length; i++) {
+  const a = args[i];
+  if (a === "--out") out = resolve(args[++i]);
+  else if (a === "--theme") theme = args[++i];
+  else if (a === "--python") python = args[++i];
+  else if (a.startsWith("--")) { console.error(`unknown flag: ${a}`); usage(); }
+  else inputs.push(resolve(a));
+}
+
+let files = [];
+for (const p of inputs) {
+  if (!existsSync(p)) {
+    console.error(`md2html: not found: ${p}`);
+    process.exit(1);
+  }
+  if (statSync(p).isDirectory()) {
+    for (const f of readdirSync(p)) {
+      if (f.endsWith(".md")) files.push(join(p, f));
+    }
+  } else {
+    files.push(p);
+  }
+}
+if (out && files.length > 1) {
+  console.error("md2html: --out applies to a single input");
+  process.exit(1);
+}
+
+let failed = 0;
+for (const f of files) {
+  try {
+    const opts = {};
+    if (theme) opts.theme = theme;
+    if (python) opts.python = python;
+    if (out && files.length === 1) opts.outPath = out;
+    const r = await render(f, opts);
+    const xy = r.xy.length ? `  (+ ${r.xy.length} xy chart${r.xy.length > 1 ? "s" : ""})` : "";
+    console.log(`${f} -> ${r.outPath}${xy}`);
+  } catch (e) {
+    failed++;
+    console.error(`md2html: ${f}\n  ${e.message}`);
+  }
+}
+process.exit(failed ? 1 : 0);
