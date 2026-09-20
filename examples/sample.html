@@ -4867,6 +4867,12 @@ globalThis["mermaid"] = globalThis.__esbuild_esm_mermaid_nm["mermaid"].default;
 
   function initMermaid() {
     if (!mermaid) return;
+    // Mermaid v12 run() reads diagram source from innerHTML, not data-src —
+    // seed it from the canonical data-src attribute before rendering.
+    Array.from(document.querySelectorAll(".mermaid")).forEach(function (el) {
+      var src = el.getAttribute("data-src");
+      if (src && !el.innerHTML.trim()) el.innerHTML = src;
+    });
     mermaid.initialize(initOpts());
     return mermaid.run({ querySelector: ".mermaid" });
   }

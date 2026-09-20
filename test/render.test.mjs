@@ -61,6 +61,36 @@ test("Mermaid block -> data-src div, not highlighted code", async () => {
   assert.ok(r.html.includes("data-src="), "data-src present");
   assert.ok(!/<pre[^>]*>flowchart/.test(r.html), "mermaid source not left as <pre>");
 });
+test("Mermaid v12 contract: template seeds innerHTML from data-src before run()", async () => {
+  const { JSDOM } = await import("jsdom");
+  const p = writeReport("mm-seed.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`mermaid\nflowchart LR\n  A --> B\n\`\`\`\n`);
+  const r = await render(p);
+  // Stub mermaid: record what run() observes — exactly as v12 does,
+  // reading innerHTML then entity-decoding it.
+  const stub = `<script>window.mermaid = {
+    initialize: function () {},
+    run: function (q) {
+      window.__ran = Array.from(document.querySelectorAll(q.querySelector)).map(function (e) {
+        return e.innerHTML.trim().replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+      });
+      return Promise.resolve();
+    },
+    parse: function () { return Promise.resolve(); },
+  };</script>`;
+  const html = r.html.replace(
+    /<script id="md2html-mermaid-bundle">[\s\S]*?<\/script>/,
+    stub,
+  );
+  const dom = new JSDOM(html, { runScripts: "dangerously" });
+  await new Promise((res) => setTimeout(res, 100));
+  const seen = dom.window.__ran;
+  assert.ok(Array.isArray(seen) && seen.length === 1, "run() saw one diagram element");
+  assert.equal(
+    seen[0],
+    "flowchart LR\n  A --> B",
+    "source present in innerHTML at run() time (v12 reads innerHTML, not data-src)",
+  );
+});
 test("Mermaid gate: broken block fails the render with the parser error", async () => {
   const p = writeReport("mm-bad.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`mermaid\nflowchart LR\n  A -->\n\`\`\`\n`);
   await assert.rejects(
