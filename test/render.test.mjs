@@ -111,5 +111,12 @@ test("no XY: no xy-out dir noise in html", async () => {
   assert.equal(r.xy.length, 0);
   assert.ok(!r.html.includes('<iframe class="xy-iframe"'), "no iframe in body");
 });
+test("offline/file-safe: no module scripts, mermaid bundle inlined", async () => {
+  const p = writeReport("off.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`mermaid\nflowchart LR\n  A --> B\n\`\`\`\n`);
+  const r = await render(p);
+  assert.ok(!r.html.includes('<script type="module"'), "no module scripts (breaks on file://)");
+  assert.ok(r.html.includes('md2html-mermaid-bundle'), "mermaid bundle inlined");
+  assert.ok(r.html.includes("globalThis[\"mermaid\"]"), "bundle assigns global");
+});
 
 process.on("exit", () => rmSync(dir, { recursive: true, force: true }));

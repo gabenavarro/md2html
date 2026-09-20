@@ -7,7 +7,7 @@ HTML is a derived, human-facing render with:
 
 - **Shiki** syntax highlighting (light/dark via CSS variables, one file)
 - **KaTeX** math with fonts inlined (zero network requests for math)
-- **Mermaid** diagrams, theme-aware re-render on toggle
+- **Mermaid** diagrams, theme-aware re-render on toggle — bundle inlined, no network needed
 - **XY** interactive charts ([reflex-dev/xy](https://github.com/reflex-dev/xy)) —
   pan/zoom/selection, embedded as theme-synced iframe variants
 - GFM tables, alerts, task lists; auto TOC; light/dark theme toggle
@@ -18,10 +18,16 @@ HTML is a derived, human-facing render with:
 ```bash
 git clone https://github.com/gabenavarro/md2html
 cd md2html
-bash scripts/ensure-env.sh        # idempotent: node deps + .venv with xy
+bash scripts/ensure-env.sh        # self-provisioning, idempotent
 ```
 
-Requires Node ≥ 20 and Python ≥ 3.11 (or `uv`, which can provision Python).
+`ensure-env.sh` installs everything it can find a way to: Node ≥ 20 and npm
+dependencies, `uv` (preferred Python provisioner) via Homebrew/pip/curl
+install script, and a `.venv` with XY (uv downloads a managed CPython 3.13
+when no suitable system Python exists). On a bare machine with Homebrew it
+completes fully automatically; on a bare apt box it handles what `apt`
+covers and reports the rest. If no package manager is available it degrades
+to actionable error messages.
 
 ## Usage
 
@@ -146,7 +152,7 @@ test/render.test.mjs     node --test suite
 ## Development
 
 ```bash
-npm test                 # 10 tests
+npm test                 # 11 tests
 node bin/md2html.mjs examples/sample.md
 ```
 

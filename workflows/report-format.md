@@ -61,6 +61,8 @@ flowchart LR
 All Mermaid v12 diagram types: flowchart, sequenceDiagram, classDiagram,
 stateDiagram, erDiagram, gantt, pie, mindmap, timeline, journey, gitGraph.
 Diagrams re-render on theme toggle (light: `default`, dark: `dark`).
+The Mermaid bundle is inlined into the report at render time, so diagrams
+work offline and from `file://` (no module scripts, no network).
 
 Rules:
 - Keep node labels short; long labels break layout.
