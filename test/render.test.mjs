@@ -117,6 +117,7 @@ test("offline/file-safe: no module scripts, mermaid bundle inlined", async () =>
   assert.ok(!r.html.includes('<script type="module"'), "no module scripts (breaks on file://)");
   assert.ok(r.html.includes('md2html-mermaid-bundle'), "mermaid bundle inlined");
   assert.ok(r.html.includes("globalThis[\"mermaid\"]"), "bundle assigns global");
+  assert.ok(!r.html.includes("cdn.jsdelivr.net"), "zero external references");
 });
 
 process.on("exit", () => rmSync(dir, { recursive: true, force: true }));
