@@ -81,7 +81,7 @@ $$
 Feature support (see `workflows/report-format.md` for full details):
 
 - **Fenced code** — ` ```python `, ` ```bash `, etc. → Shiki, light/dark themes
-- **Mermaid** — ` ```mermaid ` blocks → live diagrams, theme-aware
+- **Mermaid** — ` ```mermaid ` blocks → live diagrams, theme-aware; every block is syntax-checked at build time and a broken diagram fails the render with the parser's line-precise error (bypass: `--no-check`)
 - **XY charts** — ` ```xy ` blocks → standalone interactive HTML (pan/zoom/
   selection), theme-synced via light/dark iframe variants
 - **Math** — `$$ ... $$` blocks and `$...$` inline → KaTeX, fonts inlined
@@ -95,7 +95,7 @@ node <skill-dir>/bin/md2html.mjs <report.md>
 # outputs <report>.html next to the .md (+ xy-out/ when XY charts present)
 ```
 
-Flags: `--out path`, `--theme auto|light|dark`, `--python <path>`.
+Flags: `--out path`, `--theme auto|light|dark`, `--python <path>`, `--no-check` (skip the Mermaid gate).
 Directory argument renders every `*.md` in it.
 
 ## Subagent orchestration (high-quality reports)

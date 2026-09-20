@@ -7,7 +7,7 @@ HTML is a derived, human-facing render with:
 
 - **Shiki** syntax highlighting (light/dark via CSS variables, one file)
 - **KaTeX** math with fonts inlined (zero network requests for math)
-- **Mermaid** diagrams, theme-aware re-render on toggle — bundle inlined, no network needed
+- **Mermaid** diagrams, theme-aware re-render on toggle — bundle inlined, no network needed; **syntax-checked at build time** (broken diagrams fail the render with a line-precise error, `--no-check` to bypass)
 - **XY** interactive charts ([reflex-dev/xy](https://github.com/reflex-dev/xy)) —
   pan/zoom/selection, embedded as theme-synced iframe variants
 - GFM tables, alerts, task lists; auto TOC; light/dark theme toggle
@@ -35,6 +35,7 @@ to actionable error messages.
 node bin/md2html.mjs report.md            # -> report.html
 node bin/md2html.mjs reports/             # render every *.md in a directory
 node bin/md2html.mjs report.md --out out.html --theme dark
+node bin/md2html.mjs report.md --no-check        # skip the Mermaid syntax gate
 ```
 
 The renderer is also usable as a library:
@@ -152,8 +153,7 @@ test/render.test.mjs     node --test suite
 ## Development
 
 ```bash
-npm test                 # 11 tests
-node bin/md2html.mjs examples/sample.md
+npm test                 # 13 tests
 ```
 
 ## License

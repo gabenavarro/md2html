@@ -11,7 +11,7 @@
  *   --out <path>        output path (single input only)
  *   --theme <auto|light|dark>  force theme (default: auto -> prefers-color-scheme)
  *   --python <path>     python interpreter with `xy` installed (default: ./.venv/bin/python)
- *   --keep-xy-src       keep generated xy-src/*.py files (default: keep)
+ *   --no-check          skip the build-time Mermaid syntax gate
  *
  * XY charts: fenced ```xy blocks are extracted to xy-src/, rendered via
  * scripts/xy-export.py into xy-out/ (light + dark standalone HTML), and
@@ -27,7 +27,7 @@ function usage() {
   console.log(`md2html — Markdown reports -> self-contained HTML
 
 Usage:
-  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path]`);
+  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check]`);
   process.exit(1);
 }
 
@@ -35,12 +35,13 @@ const args = process.argv.slice(2);
 if (args.includes("--help") || args.includes("-h") || args.length === 0) usage();
 
 const inputs = [];
-let out, theme, python;
+let out, theme, python; let noCheck = false;
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--out") out = resolve(args[++i]);
   else if (a === "--theme") theme = args[++i];
   else if (a === "--python") python = args[++i];
+  else if (a === "--no-check") noCheck = true;
   else if (a.startsWith("--")) { console.error(`unknown flag: ${a}`); usage(); }
   else inputs.push(resolve(a));
 }
@@ -70,6 +71,7 @@ for (const f of files) {
     const opts = {};
     if (theme) opts.theme = theme;
     if (python) opts.python = python;
+    if (noCheck) opts.noCheck = true;
     if (out && files.length === 1) opts.outPath = out;
     const r = await render(f, opts);
     const xy = r.xy.length ? `  (+ ${r.xy.length} xy chart${r.xy.length > 1 ? "s" : ""})` : "";

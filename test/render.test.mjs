@@ -61,6 +61,20 @@ test("Mermaid block -> data-src div, not highlighted code", async () => {
   assert.ok(r.html.includes("data-src="), "data-src present");
   assert.ok(!/<pre[^>]*>flowchart/.test(r.html), "mermaid source not left as <pre>");
 });
+test("Mermaid gate: broken block fails the render with the parser error", async () => {
+  const p = writeReport("mm-bad.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`mermaid\nflowchart LR\n  A -->\n\`\`\`\n`);
+  await assert.rejects(
+    () => render(p),
+    (e) => /mermaid block 1 fails to parse/.test(e.message) && /A -->/.test(e.message),
+    "gate rejects with line-precise detail",
+  );
+});
+
+test("Mermaid gate: --no-check bypass ships anyway", async () => {
+  const p = writeReport("mm-bad2.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`mermaid\nflowchart LR\n  A -->\n\`\`\`\n`);
+  const r = await render(p, { noCheck: true });
+  assert.ok(r.html.includes('class="diagram mermaid"'), "diagram div still emitted");
+});
 
 test("GFM alert -> .alert.alert-note with bold label", async () => {
   const p = writeReport("al.md", `# T\n\n## A\n\n## B\n\n## C\n\n> [!NOTE]\n> hello\n`);

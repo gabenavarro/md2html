@@ -64,6 +64,10 @@ Diagrams re-render on theme toggle (light: `default`, dark: `dark`).
 The Mermaid bundle is inlined into the report at render time, so diagrams
 work offline and from `file://` (no module scripts, no network).
 
+The renderer gates every block at build time with `mermaid.parse`: invalid
+diagrams fail the render with the parser's line-precise error (bypass with
+`--no-check`) — a report can never ship a diagram that renders as an error.
+
 Rules:
 - Keep node labels short; long labels break layout.
 - One diagram per fenced block; each gets its own card.
