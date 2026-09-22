@@ -45,6 +45,49 @@ test("TOC built from 3+ headings, slugs match", async () => {
   assert.ok(r.html.includes(`href="#alpha-section"`), "toc anchor present");
 });
 
+test("TOC ignores headings inside fenced code blocks", async () => {
+  const p = writeReport("toc-fence.md", `# T
+
+## Alpha
+
+\`\`\`bash
+## not a real heading
+### also fake
+\`\`\`
+
+## Beta
+
+~~~
+## tilde-fenced fake
+~~~
+
+## Gamma
+`);
+  const r = await render(p);
+  assert.deepEqual(r.toc.map((t) => t.text), ["Alpha", "Beta", "Gamma"]);
+  assert.ok(!r.html.includes("not-a-real-heading"), "no dead link from bash fence");
+  assert.ok(!r.html.includes("tilde-fenced-fake"), "no dead link from tilde fence");
+});
+
+test("TOC handles longer outer fences (4-backtick wrapping 3-backtick)", async () => {
+  const p = writeReport("toc-longfence.md", `# T
+
+## Real A
+
+\`\`\`\`markdown
+\`\`\`python
+## fake inside
+\`\`\`
+\`\`\`\`
+
+## Real B
+
+## Real C
+`);
+  const r = await render(p);
+  assert.deepEqual(r.toc.map((t) => t.text), ["Real A", "Real B", "Real C"]);
+});
+
 test("Shiki: dual-theme pre, language class, no language-mermaid leak", async () => {
   const p = writeReport("code.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`python\nx = 1\n\`\`\`\n`);
   const r = await render(p);
