@@ -70,6 +70,23 @@ test("TOC ignores headings inside fenced code blocks", async () => {
   assert.ok(!r.html.includes("tilde-fenced-fake"), "no dead link from tilde fence");
 });
 
+test("TOC anchors resolve: every href has a matching heading id", async () => {
+  const p = writeReport("toc-anchors.md", `# T
+
+## TL;DR
+
+## TL;DR
+
+## Results
+`);
+  const r = await render(p);
+  const ids = new Set([...r.html.matchAll(/<h[23] id="([^"]+)"/g)].map((m) => m[1]));
+  const refs = [...r.html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(refs.length >= 3, "TOC rendered");
+  const dead = refs.filter((ref) => !ids.has(ref));
+  assert.deepEqual(dead, [], "no dead TOC links (duplicate headings dedupe identically)");
+});
+
 test("TOC handles longer outer fences (4-backtick wrapping 3-backtick)", async () => {
   const p = writeReport("toc-longfence.md", `# T
 
