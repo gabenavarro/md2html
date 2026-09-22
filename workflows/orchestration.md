@@ -13,7 +13,7 @@ orchestration: write the Markdown, render, verify — done.
 |------|-----------|-------|-----|
 | **Architect** | `task` | 1 | Defines section plan, data contracts, figure list |
 | **Section writers** | `task` / `scout` | N (parallel) | Draft one section each |
-| **Figure specialist** | `task` | 1 (optional) | XY chart sources + Mermaid diagrams |
+| **Figure specialist** | `task` | 1 (optional) | `fig` static figures, `xy` chart sources, Mermaid diagrams |
 | **Assembler** | `task` | 1 | Merges into final `.md`, fixes seams |
 | **Reviewer** | `reviewer` | 1 | Checks rendered HTML, returns fixes |
 
@@ -63,10 +63,18 @@ batch; larger reports: 2 waves.
 
 ### 3. Figure specialist (parallel with writers)
 
-Writes `figures/<n>-<slug>.py` — self-contained XY chart sources (see
-`report-format.md` → XY charts) — plus mermaid blocks inline in a
-`figures/mermaid.md` snippet. Charts must run standalone:
-`.venv/bin/python figures/n-slug.py` should succeed in a scratch dir.
+Writes `figures/<n>-<slug>.py` — self-contained sources for the plan's
+figure list (see `report-format.md`):
+
+- **Static figures** (`fig` blocks): matplotlib scripts that end with
+  `save()`. These are the primary figure form — theme-aware SVG inlined
+  into the report.
+- **Interactive charts** (`xy` blocks): `xy` chart sources, used only
+  when the reader should pan/zoom.
+- **Mermaid** blocks inline in a `figures/mermaid.md` snippet.
+
+Every source must run standalone: `.venv/bin/python figures/n-slug.py`
+should succeed in a scratch dir.
 
 ### 4. Assembler (sequential)
 
@@ -76,17 +84,21 @@ One `task` agent:
   all sections in plan order, splicing in figures.
 - Fixes seams: repeated intros, inconsistent units, dangling references.
 - Runs `bash scripts/ensure-env.sh && node bin/md2html.mjs report.md`.
-- Acceptance: render exits 0, `xy-out/` has light+dark files for every
-  chart, no missing-image warnings.
+- Acceptance: render exits 0, `fig-out/` (and `xy-out/` when charts
+  present) has light+dark files for every figure, no missing-image
+  warnings, no `fig:` placeholder text leaked into the HTML.
 
 ### 5. Reviewer (sequential)
 
 `reviewer` agent with the rendered HTML path:
 
 - Opens the HTML (read the file; spot-check structure) **and** is told to
-  verify: every table renders, every figure present (light+dark xy-out
-  files exist), TOC slugs match headings, math present, no placeholder
-  text ("TODO", "TBD", "lorem"), numbers consistent across sections.
+  verify: every table renders, **every figure present — count the
+  `fig`/`xy`/`svg` blocks in the source and confirm each produced output
+  (`fig-out/`/`xy-out/` light+dark files for fences, inline `<figure>`/
+  `<svg>` for inlined ones)**, TOC slugs match headings, math present,
+  no placeholder text ("TODO", "TBD", "lorem"), no `fig:`/`xy:`
+  placeholder strings leaked, numbers consistent across sections.
 - Returns a fix list. The Assembler applies fixes and re-renders.
 - Loop max 2 rounds; if a third round is needed, stop and surface the
   disagreement to the user.

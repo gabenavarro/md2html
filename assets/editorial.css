@@ -1,0 +1,315 @@
+/* md2html editorial theme — single-column report, Manrope, light/dark.
+ *
+ * Palette mirrors scripts/fig-export.py so inlined figures are color-matched
+ * to the page by construction. SVG figures use these variables directly
+ * (fill="var(--ink)" etc.), so they re-theme on toggle.
+ */
+
+:root {
+  --bg: #fdfcfb;
+  --surface: #ffffff;
+  --ink: #2c2c30;
+  --muted: #6b6b72;
+  --line: #e7e7ea;
+  --coral: #ef6a4d;
+  --teal: #2fb7a4;
+  --orange: #f08a3c;
+  --purple: #9b7ede;
+  --red: #ef5a52;
+  --blue: #4f46e5;
+  --green: #059669;
+  --coral-soft: #fdeae3;
+  --teal-soft: #e4f6f2;
+  --orange-soft: #fdefdf;
+  --purple-soft: #f0ebfb;
+  --code-bg: #f4f3f1;
+  --inline-code-bg: #f1f0ee;
+  --table-stripe: rgba(0, 0, 0, 0.02);
+  --hero-grad: linear-gradient(118deg, #fbe5d8 0%, #f6bfa0 45%, #f0705a 100%);
+  --hero-ink: #2a2a2d;
+  --hero-text: #6b3a2c;
+  --hero-kicker: #7a3e30;
+  --hero-meta: #7a3e30;
+  --font: "Manrope", "Inter", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+}
+
+html.dark {
+  --bg: #0d0d0f;
+  --surface: #141417;
+  --ink: #ececec;
+  --muted: #9a9aa2;
+  --line: #26262c;
+  --coral: #ff7b72;
+  --teal: #39c5cf;
+  --orange: #ffa657;
+  --purple: #d2a8ff;
+  --red: #ff7b72;
+  --blue: #8b85ff;
+  --green: #34d399;
+  --coral-soft: rgba(255, 123, 114, 0.12);
+  --teal-soft: rgba(57, 197, 207, 0.12);
+  --orange-soft: rgba(255, 166, 87, 0.12);
+  --purple-soft: rgba(210, 168, 255, 0.12);
+  --code-bg: #101014;
+  --inline-code-bg: rgba(255, 255, 255, 0.08);
+  --table-stripe: rgba(255, 255, 255, 0.03);
+  --hero-grad: linear-gradient(118deg, #2a1410 0%, #3d1c14 45%, #5a2a1e 100%);
+  --hero-ink: #f5e9e4;
+  --hero-text: #d8b3a6;
+  --hero-kicker: #ff9d8a;
+  --hero-meta: #e0a393;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; }
+
+/* ---- Hero ---- */
+header.hero {
+  background: var(--hero-grad);
+  padding: 52px 0 44px;
+  position: relative;
+}
+header.hero .wrap { padding: 0 24px; }
+.hero-kicker {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hero-kicker);
+}
+.hero h1 {
+  font-size: clamp(28px, 4.4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.12;
+  color: var(--hero-ink);
+  margin: 12px 0 16px;
+  max-width: 22ch;
+}
+.hero .hero-lede {
+  font-size: 16px;
+  color: var(--hero-text);
+  font-weight: 600;
+  max-width: 62ch;
+  margin: 0;
+}
+.hero .hero-meta {
+  margin-top: 22px;
+  font-size: 13px;
+  color: var(--hero-meta);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.theme-toggle {
+  position: absolute;
+  top: 18px; right: 18px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--hero-ink);
+  font-size: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.theme-toggle:hover { transform: scale(1.08); }
+
+/* ---- Sections ---- */
+main.wrap { padding-top: 8px; padding-bottom: 8px; }
+section, .report-section { padding: 44px 0; border-bottom: 1px solid var(--line); }
+.report-body > :first-child { margin-top: 0; }
+.report-body h2 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  margin: 0 0 18px;
+  line-height: 1.2;
+}
+.report-body h3 { font-size: 19px; font-weight: 700; margin: 28px 0 10px; }
+.report-body p { margin: 0.7rem 0; }
+.report-body a { color: var(--blue); text-decoration: none; }
+.report-body a:hover { text-decoration: underline; }
+
+.kicker {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin: 0 0 6px;
+}
+
+/* ---- Intuitive / Technical panels ---- */
+.lvl {
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+.lvl-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.lvl-body { font-size: 15.5px; }
+.lvl-body p:first-child { margin-top: 0; }
+.lvl-intuitive { background: var(--coral-soft); }
+.lvl-intuitive .lvl-label { color: var(--coral); }
+.lvl-technical { background: var(--teal-soft); }
+.lvl-technical .lvl-label { color: var(--teal); }
+
+/* ---- Callout (findings) ---- */
+.callout {
+  margin: 20px 0;
+  background: var(--coral-soft);
+  border-left: 4px solid var(--coral);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-weight: 700;
+  font-size: 15.5px;
+  color: var(--ink);
+}
+
+/* ---- Lists ---- */
+.report-body ul, .report-body ol { padding-left: 1.4rem; }
+.report-body li { margin: 0.3rem 0; }
+.report-body li::marker { color: var(--muted); }
+
+/* ---- Blockquote / alerts ---- */
+.report-body blockquote {
+  margin: 1rem 0; padding: 0.6rem 1rem;
+  border-left: 3px solid var(--line);
+  color: var(--muted); background: var(--surface);
+}
+.report-body blockquote.alert { padding: 0.6rem 0.9rem; }
+.report-body .alert-note { border-left-color: var(--blue); background: var(--purple-soft); }
+.report-body .alert-tip, .report-body .alert-important { border-left-color: var(--green); background: var(--teal-soft); }
+.report-body .alert-warning, .report-body .alert-caveat { border-left-color: var(--orange); background: var(--orange-soft); }
+
+/* ---- Tables ---- */
+.report-body table { width: 100%; border-collapse: collapse; margin: 1.1rem 0; font-size: 14px; }
+.report-body th, .report-body td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.report-body th {
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 11.5px; color: var(--muted); font-weight: 800;
+}
+.report-body tbody tr:nth-child(even) { background: var(--table-stripe); }
+
+/* ---- Code ---- */
+.report-body code { font-family: var(--mono); font-size: 0.86em; }
+.report-body :not(pre) > code {
+  background: var(--inline-code-bg);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.08rem 0.35rem;
+}
+.report-body pre {
+  background: var(--code-bg) !important;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin: 1rem 0;
+}
+/* Shiki dual-theme (modern Primer), transparent spans on unified surface */
+.report-body pre[class*="shiki"],
+.report-body pre[class*="shiki"] code,
+.report-body pre[class*="shiki"] span {
+  color: var(--shiki);
+  background-color: transparent;
+  font-style: var(--shiki-font-style);
+  font-weight: var(--shiki-font-weight);
+  text-decoration: var(--shiki-text-decoration);
+}
+html:not(.dark) .report-body pre[class*="shiki"] { color: var(--shiki-light); }
+html:not(.dark) .report-body pre[class*="shiki"] code,
+html:not(.dark) .report-body pre[class*="shiki"] span {
+  color: var(--shiki-light);
+  background-color: transparent;
+}
+html.dark .report-body pre[class*="shiki"] { color: var(--shiki-dark); }
+html.dark .report-body pre[class*="shiki"] code,
+html.dark .report-body pre[class*="shiki"] span {
+  color: var(--shiki-dark);
+  background-color: transparent;
+}
+
+/* ---- Math (KaTeX) ---- */
+.report-body .katex-display { overflow-x: auto; margin: 1rem 0; }
+.report-body .katex { font-size: 1.08em; }
+
+/* ---- Figures (inline SVG) ---- */
+.figure {
+  margin: 1.4rem 0;
+  padding: 18px 18px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.figure svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+/* Dual-theme: show only the active figure */
+.figure-dual .fig-dark { display: none; }
+html.dark .figure-dual .fig-light { display: none; }
+html.dark .figure-dual .fig-dark { display: block; }
+
+/* ---- Mermaid (runtime) ---- */
+.diagram.mermaid { margin: 1.4rem 0; text-align: center; }
+.diagram.mermaid svg { max-width: 100%; height: auto; }
+
+/* ---- XY (interactive iframe, secondary) ---- */
+.xy-frame { padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; margin: 1.4rem 0; position: relative; }
+.xy-iframe { width: 100%; min-height: 360px; border: 0; display: block; }
+.xy-export { position: absolute; top: 10px; right: 10px; font-size: 12px; opacity: 0; transition: opacity 0.2s; }
+.xy-frame:hover .xy-export { opacity: 1; }
+
+/* ---- Images ---- */
+.report-body img { max-width: 100%; height: auto; border-radius: 8px; }
+
+/* ---- HR ---- */
+.report-body hr { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+/* ---- Footer ---- */
+footer.report-footer {
+  padding: 32px 0 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+footer.report-footer .wrap {
+  display: flex; justify-content: space-between; gap: 1rem;
+  color: var(--muted); font-size: 13px;
+}
+
+/* ---- Scrollbars ---- */
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* ---- Small screens ---- */
+@media (max-width: 640px) {
+  header.hero { padding: 36px 0 32px; }
+  .wrap { padding: 0 18px; }
+  section, .report-section { padding: 32px 0; }
+}
+
+/* ---- Print ---- */
+@media print {
+  .theme-toggle, .xy-export { display: none; }
+  body { background: #fff; color: #000; }
+  header.hero { background: none; padding: 0 0 1rem; }
+  .hero h1, .hero .hero-lede, .hero .hero-meta, .hero-kicker { color: #000; }
+}

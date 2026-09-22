@@ -40,10 +40,10 @@ Write a Markdown file with YAML frontmatter:
 ````markdown
 ---
 title: Q3 Experiment Results
-description: One-line summary (shown in <meta>).
+description: One-line summary (shown in the hero + <meta>).
 date: 2026-09-20
 author: OMP
-toc: true
+kicker: Engram · Q3 Validation
 theme: auto          # auto | light | dark
 meta:
   project: engram
@@ -80,22 +80,28 @@ $$
 
 Feature support (see `workflows/report-format.md` for full details):
 
+- **Editorial theme** (default) — single-column magazine layout: gradient
+  hero (kicker + title + lede + meta chips), numbered section kickers
+  (`<!-- kicker: Name -->` above a `##`), `**Intuitively.**`/
+  `**Technically.**` panels, bordered sections
+- **Static figures** — ` ```fig ` blocks (matplotlib) → theme-aware SVG
+  inlined into the report (light+dark variants, palette-coherent)
+- **Inline SVG** — ` ```svg ` blocks → dual-theme inline figures
+- **XY charts** — ` ```xy ` blocks → standalone interactive HTML
+  (pan/zoom/selection), theme-synced via light/dark iframe variants
 - **Fenced code** — ` ```python `, ` ```bash `, etc. → Shiki, light/dark themes
 - **Mermaid** — ` ```mermaid ` blocks → live diagrams, theme-aware; every block is syntax-checked at build time and a broken diagram fails the render with the parser's line-precise error (bypass: `--no-check`)
-- **XY charts** — ` ```xy ` blocks → standalone interactive HTML (pan/zoom/
-  selection), theme-synced via light/dark iframe variants
 - **Math** — `$$ ... $$` blocks and `$...$` inline → KaTeX, fonts inlined
 - **GFM** — tables, strikethrough, task lists, alerts (`> [!NOTE]`)
-- **TOC** — auto-generated for documents with 3+ `##`/`###` headings
 
 ## Rendering
 
 ```bash
 node <skill-dir>/bin/md2html.mjs <report.md>
-# outputs <report>.html next to the .md (+ xy-out/ when XY charts present)
+# outputs <report>.html next to the .md (+ fig-out/ and xy-out/ when figures present)
 ```
 
-Flags: `--out path`, `--theme auto|light|dark`, `--python <path>`, `--no-check` (skip the Mermaid gate), `--open` (open rendered reports in the default browser).
+Flags: `--out path`, `--theme auto|light|dark`, `--python <path>`, `--no-check` (skip the Mermaid gate), `--css <path>` (custom stylesheet; default `assets/editorial.css`), `--open` (open rendered reports in the default browser).
 Directory argument renders every `*.md` in it. Local images (≤8 MB) are inlined as data URIs so the `.html` stays self-contained after being copied; remote URLs pass through.
 
 ## Subagent orchestration (high-quality reports)
@@ -118,9 +124,10 @@ done until a reviewer subagent has checked the rendered HTML.
 - `bin/md2html.mjs` — CLI renderer
 - `lib/render.mjs` — core pipeline (unified/remark/rehype)
 - `lib/template.mjs` — single-file HTML template (theme toggle, mermaid, xy)
-- `assets/report.css` — report stylesheet
+- `assets/editorial.css` — editorial theme (default): hero, kickers, panels, figures
 - `scripts/ensure-env.sh` — idempotent environment bootstrap
 - `scripts/xy-export.py` — XY chart source → standalone HTML (manifest mode)
+- `scripts/fig-export.py` — `fig` block source → theme-tuned SVG (manifest mode)
 - `workflows/report-format.md` — full formatting reference
 - `workflows/orchestration.md` — subagent orchestration pattern
 - `examples/sample.md` — reference report exercising every feature

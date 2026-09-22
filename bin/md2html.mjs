@@ -13,6 +13,7 @@
  *   --python <path>     python interpreter with `xy` installed (default: ./.venv/bin/python)
  *   --no-check          skip the build-time Mermaid syntax gate
  *   --open              open each rendered report in the default browser
+ *   --css <path>        custom stylesheet file (default: assets/editorial.css)
  *
  * XY charts: fenced ```xy blocks are extracted to xy-src/, rendered via
  * scripts/xy-export.py into xy-out/ (light + dark standalone HTML), and
@@ -28,8 +29,8 @@ import { render } from "../lib/render.mjs";
 function usage(code = 1) {
   console.log(`md2html — Markdown reports -> self-contained HTML
 
-Usage:
-  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check] [--open] [--version]`);
+  Usage:
+  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check] [--css path] [--open] [--version]`);
   process.exit(code);
 }
 
@@ -44,8 +45,8 @@ if (args.includes("--version") || args.includes("-v")) {
 }
 if (args.includes("--help") || args.includes("-h")) usage(0);
 if (args.length === 0) usage(1);
+let out, theme, python, css; let noCheck = false, open = false;
 const inputs = [];
-let out, theme, python; let noCheck = false, open = false;
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--out") out = resolve(args[++i]);
@@ -53,6 +54,7 @@ for (let i = 0; i < args.length; i++) {
   else if (a === "--python") python = args[++i];
   else if (a === "--no-check") noCheck = true;
   else if (a === "--open") open = true;
+  else if (a === "--css") css = resolve(args[++i]);
   else if (a.startsWith("--")) { console.error(`unknown flag: ${a}`); usage(); }
   else inputs.push(resolve(a));
 }
@@ -84,8 +86,8 @@ for (const f of files) {
     const opts = {};
     if (theme) opts.theme = theme;
     if (python) opts.python = python;
-    if (noCheck) opts.noCheck = true;
     if (out && files.length === 1) opts.outPath = out;
+    if (css) opts.css = readFileSync(css, "utf8");
     const r = await render(f, opts);
     const xy = r.xy.length ? `  (+ ${r.xy.length} xy chart${r.xy.length > 1 ? "s" : ""})` : "";
     console.log(`${f} -> ${r.outPath}${xy}`);

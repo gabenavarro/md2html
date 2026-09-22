@@ -5,15 +5,21 @@ Render agent-authored Markdown reports into **vibrant, self-contained HTML**.
 Markdown stays the canonical artifact (agents write it, diff it, grep it);
 HTML is a derived, human-facing render with:
 
+- **Editorial theme** (default) — single-column magazine layout: gradient
+  hero (kicker + title + lede + meta chips), numbered section kickers,
+  `**Intuitively.**`/`**Technically.**` panels, bordered sections
+  (`--css <path>` to supply a custom stylesheet)
+- **Static figures** — ` ```fig ` blocks (matplotlib) → theme-aware SVG
+  inlined into the report (light+dark variants, palette-coherent)
 - **Shiki** syntax highlighting (light/dark via CSS variables, one file)
 - **KaTeX** math with fonts inlined (zero network requests for math)
 - **Mermaid** diagrams, theme-aware re-render on toggle — bundle inlined, no network needed; **syntax-checked at build time** (broken diagrams fail the render with a line-precise error, `--no-check` to bypass)
 - **XY** interactive charts ([reflex-dev/xy](https://github.com/reflex-dev/xy)) —
   pan/zoom/selection, embedded as theme-synced iframe variants
-- GFM tables, alerts, task lists; auto TOC; light/dark theme toggle
+- GFM tables, alerts, task lists; light/dark theme toggle
 - **Self-contained by default** — local images inlined, math fonts inlined,
   diagram bundle inlined; a copied `.html` renders identically off-network
-- Output is a single `.html` file (+ `xy-out/` chart files when charts present)
+- Output is a single `.html` file (+ `fig-out/`/`xy-out/` when figures present)
 
 ## Install (any machine, any harness)
 
@@ -73,12 +79,13 @@ figure specialist → assembler → reviewer) — see
 
 ## Authoring a report
 
-```markdown
+````markdown
 ---
 title: Q3 Experiment Results
-description: One-line summary.
+description: One-line summary (hero lede).
 date: 2026-09-20
 author: OMP
+kicker: Engram · Q3 Validation
 meta:
   project: engram
   run: q3
@@ -95,23 +102,23 @@ meta:
 > [!NOTE]
 > Provenance note.
 
+<!-- kicker: Architecture -->
 ## Architecture
+
+**Intuitively.** Data flows in, predictions flow out, each stage upgradeable.
 
 ```mermaid
 flowchart LR
   A[Ingest] --> B[Transform] --> C[Store]
 ```
 
+<!-- kicker: Throughput -->
 ## Throughput
 
-```xy
-import numpy as np
-import xy
-chart = xy.line_chart(
-    xy.line([1, 2, 3], [10, 20, 15], color="#4f46e5", width=2.5),
-    xy.x_axis(label="day"), xy.y_axis(label="seq/s"),
-    title="tput",
-)
+```fig
+fig, ax = plt.subplots()
+ax.plot([1, 2, 3], [10, 20, 15], color=C["coral"], lw=2.5)
+ax.set_title("Throughput"); clean(ax); save()
 ```
 
 $$\mathcal{L} = \sum_i y_i \log \hat{y}_i$$
@@ -119,7 +126,7 @@ $$\mathcal{L} = \sum_i y_i \log \hat{y}_i$$
 ```python
 import numpy as np
 ```
-```
+````
 
 Full feature reference: [`workflows/report-format.md`](workflows/report-format.md).
 Worked example: [`examples/sample.md`](examples/sample.md).
@@ -142,19 +149,18 @@ SKILL.md                 skill definition (harness entry point)
 bin/md2html.mjs          CLI
 lib/render.mjs           core renderer (unified pipeline)
 lib/template.mjs         single-file HTML template (theme, mermaid, xy sync)
-assets/report.css        report stylesheet (light/dark CSS variables)
+assets/editorial.css     editorial theme (default): hero, kickers, panels, figures
 scripts/ensure-env.sh    idempotent environment bootstrap
 scripts/xy-export.py     XY source -> standalone HTML (manifest mode)
+scripts/fig-export.py    fig source -> theme-tuned SVG (manifest mode)
 workflows/report-format.md   full formatting reference
 workflows/orchestration.md   subagent orchestration pattern
 examples/sample.md       reference report
 test/render.test.mjs     node --test suite
 ```
 
-## Development
-
 ```bash
-npm test                 # 17 tests
+npm test                 # 25 tests
 ```
 
 ## License

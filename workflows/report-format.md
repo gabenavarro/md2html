@@ -7,23 +7,52 @@ reads well *as Markdown* — HTML is derived, never hand-authored.
 
 | Key | Type | Default | Notes |
 |-----|------|---------|-------|
-| `title` | string | filename | Report H1 |
-| `description` | string | `""` | `<meta description>` |
+| `title` | string | filename | Report H1 (rendered in the hero) |
+| `description` | string | `""` | `<meta description>`; hero lede fallback |
 | `date` | string | today | Shown in footer |
-| `author` | string | `""` | |
+| `author` | string | `""` | Rendered as a meta chip |
+| `kicker` | string | `""` | Small-caps label above the hero title (e.g. `Engram · Q3 Validation`) |
 | `theme` | `auto`\|`light`\|`dark` | `auto` | `auto` = follows viewer preference, toggle always available |
-| `toc` | bool | `true` | TOC appears when the doc has 3+ `##`/`###` headings |
-| `meta.*` | any | — | Rendered as chips under the title (project, run, version, …) |
+| `meta.*` | any | — | Rendered as chips under the hero (project, run, version, …) |
 
 Everything under `meta:` becomes a chip. Keep chips short (project, run id,
 dataset, version).
+## Headings & layout
 
-## Headings & TOC
+- `#` → report title, rendered once in the hero (the body H1 is dropped;
+  prefer frontmatter `title`).
+- `##`, `###` → section anchors (auto slugs, GitHub-style) and `toc` data
+  on the returned object. The editorial theme is single-column: there is no
+  sidebar TOC, so `toc:` frontmatter only affects the `toc` return value.
+- `###` and deeper render fine; `##` starts a bordered section block.
 
-- `#` → report title (use at most once; prefer frontmatter `title`).
-- `##`, `###` → TOC entries (auto-generated slugs, GitHub-style).
-- Deeper levels (`####`) render fine but don't appear in the TOC.
+## Editorial constructs
 
+The editorial theme (default) adds a few authoring constructs:
+
+**Hero lede.** The first paragraph before the first `##` becomes the hero
+sub-title under the title. Keep it to 1–2 sentences.
+
+**Section kicker.** An HTML comment directly above a `##` heading becomes a
+numbered small-caps label ("01 · Architecture"):
+
+```markdown
+<!-- kicker: Architecture -->
+## Pipeline Architecture
+```
+
+Kickers are numbered in document order. Omit the comment for unnumbered
+sections.
+
+**Intuitive / Technical panels.** A paragraph that starts with
+`**Intuitively.**` or `**Technically.**` renders as a tinted two-line panel
+(coral / teal). Use for the "why it matters" framing after a section opener:
+
+```markdown
+**Intuitively.** Picture an assembly line: raw data in, predictions out.
+
+**Technically.** The pipeline is a DAG of 7 independently parallelizable stages.
+```
 ## Tables (GFM)
 
 ```markdown
@@ -116,6 +145,46 @@ xy.area_chart(xy.area(x, y, opacity=0.4))
 
 The standalone file also has a modebar (XY's default: download/export).
 "open" link in each chart card opens it full-window.
+
+## Static figures (matplotlib, theme-aware)
+
+For data plots that should look like hand-drawn figures in the report
+(not interactive), use a `fig` block — a matplotlib script:
+
+````markdown
+```fig
+fig, ax = plt.subplots(figsize=(6.5, 3.6))
+ax.plot(x, y, color=C["coral"], lw=2.5)
+ax.set_title("Validation throughput")
+clean(ax)
+save()
+```
+````
+
+The renderer is **self-contained**: it inlines the figure's SVG directly,
+so no side files are emitted. How it works:
+1. The block source is extracted to `fig-src/fig-<hash>.py` (stable hash —
+   identical code reuses files across renders).
+2. `scripts/fig-export.py` executes it under a themed matplotlib context and
+   saves light + dark SVG variants to `fig-out/`.
+3. Both SVGs are inlined into the report inside a dual-theme `<figure>`;
+   the theme toggle swaps which one shows. SVG colors are rewritten to CSS
+   variables, so figures re-theme with the page.
+
+Available in the namespace (see `scripts/fig-export.py` docstring for the
+full contract):
+- `plt` — matplotlib.pyplot, pre-styled for the requested theme.
+- `C` — palette dict: `coral, teal, orange, purple, red, blue, green, ink,
+  muted, line, bg`. Use these semantic colors so light/dark both read.
+- `clean(ax)` — removes top/right spines, thins the grid.
+- `save()` — saves the current figure (or `fig` global) to the output SVG.
+
+Rules:
+- Self-contained like `xy` blocks: import what you use, inline or derive data.
+- Set title + axis labels; every figure should be legible at report width
+  (`figsize` ≈ `(6.5, 3.6)` is a good default).
+- Prefer `fig` for publication figures; use `xy` when the reader should
+  pan/zoom/inspect.
 
 ## Math (KaTeX)
 

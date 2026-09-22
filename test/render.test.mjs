@@ -43,7 +43,8 @@ test("TOC built from 3+ headings, slugs match", async () => {
   const r = await render(p);
   assert.equal(r.toc.length, 3);
   assert.ok(r.toc[0].slug === "alpha-section", "slug generated: " + r.toc[0].slug);
-  assert.ok(r.html.includes(`href="#alpha-section"`), "toc anchor present");
+  // Editorial theme renders TOC data only (no sidebar nav); heading ids carry the anchors.
+  assert.ok(r.html.includes('id="alpha-section"'), "heading id present");
 });
 
 test("TOC ignores headings inside fenced code blocks", async () => {
@@ -69,8 +70,7 @@ test("TOC ignores headings inside fenced code blocks", async () => {
   assert.ok(!r.html.includes("not-a-real-heading"), "no dead link from bash fence");
   assert.ok(!r.html.includes("tilde-fenced-fake"), "no dead link from tilde fence");
 });
-
-test("TOC anchors resolve: every href has a matching heading id", async () => {
+test("TOC slugs resolve: every toc slug has a matching heading id", async () => {
   const p = writeReport("toc-anchors.md", `# T
 
 ## TL;DR
@@ -81,10 +81,9 @@ test("TOC anchors resolve: every href has a matching heading id", async () => {
 `);
   const r = await render(p);
   const ids = new Set([...r.html.matchAll(/<h[23] id="([^"]+)"/g)].map((m) => m[1]));
-  const refs = [...r.html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(refs.length >= 3, "TOC rendered");
-  const dead = refs.filter((ref) => !ids.has(ref));
-  assert.deepEqual(dead, [], "no dead TOC links (duplicate headings dedupe identically)");
+  assert.ok(r.toc.length >= 3, "TOC data built");
+  const dead = r.toc.filter((t) => !ids.has(t.slug));
+  assert.deepEqual(dead, [], "no dead slugs (duplicate headings dedupe identically)");
 });
 
 test("TOC handles longer outer fences (4-backtick wrapping 3-backtick)", async () => {
