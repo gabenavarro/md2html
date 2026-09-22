@@ -19,23 +19,31 @@
  * embedded as iframes whose src swaps with the active theme.
  */
 
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
 import { render } from "../lib/render.mjs";
 
-function usage() {
+function usage(code = 1) {
   console.log(`md2html — Markdown reports -> self-contained HTML
 
 Usage:
-  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check] [--open]`);
-  process.exit(1);
+  md2html <report.md | dir> [more.md ...] [--out path] [--theme auto|light|dark] [--python path] [--no-check] [--open] [--version]`);
+  process.exit(code);
 }
 
-const args = process.argv.slice(2);
-if (args.includes("--help") || args.includes("-h") || args.length === 0) usage();
+const VERSION = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).version;
 
+const args = process.argv.slice(2);
+if (args.includes("--version") || args.includes("-v")) {
+  console.log(`md2html ${VERSION}`);
+  process.exit(0);
+}
+if (args.includes("--help") || args.includes("-h")) usage(0);
+if (args.length === 0) usage(1);
 const inputs = [];
 let out, theme, python; let noCheck = false, open = false;
 for (let i = 0; i < args.length; i++) {
@@ -57,7 +65,9 @@ for (const p of inputs) {
   }
   if (statSync(p).isDirectory()) {
     for (const f of readdirSync(p)) {
-      if (f.endsWith(".md")) files.push(join(p, f));
+      if (!f.endsWith(".md")) continue;
+      if (f === "README.md") continue; // repo docs, not a report
+      files.push(join(p, f));
     }
   } else {
     files.push(p);
