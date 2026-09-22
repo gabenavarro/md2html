@@ -115,6 +115,20 @@ test("Shiki: dual-theme pre, language class, no language-mermaid leak", async ()
   assert.ok(!r.html.includes("language-mermaid"), "mermaid not highlighted");
 });
 
+test("Shiki: modern Primer palette, transparent spans on unified code surface", async () => {
+  const p = writeReport("pal.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`python\ndef f(x):\n    return x\n\`\`\`\n`);
+  const r = await render(p);
+  // Modern Primer (github-light/default + github-dark/default), not the
+  // muted 2018 legacy github-light/github-dark.
+  assert.ok(r.html.includes("--shiki-dark:#FF7B72"), "modern dark keyword color");
+  assert.ok(!r.html.includes("--shiki-dark:#F97583"), "legacy dark keyword color gone");
+  // Spans must not paint their own background: the unified --code-bg
+  // surface shows through, so the code block has no mismatched inset box.
+  const spanBg = r.html.match(/<span[^>]*style="[^"]*--shiki-dark-bg[^"]*"/g) || [];
+  assert.equal(spanBg.length, 0, "no span paints a shiki background");
+  assert.ok(r.html.includes("background-color: transparent"), "shiki span rule is transparent");
+});
+
 test("unregistered fence language -> plaintext fallback, no crash", async () => {
   const p = writeReport("make.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`make\nall: build\n\techo hi\n\`\`\`\n`);
   const r = await render(p);

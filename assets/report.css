@@ -254,13 +254,13 @@ html:not(.dark) .report-body pre[class*="shiki"],
 html:not(.dark) .report-body pre[class*="shiki"] code,
 html:not(.dark) .report-body pre[class*="shiki"] span {
   color: var(--shiki-light);
-  background-color: var(--shiki-light-bg);
+  background-color: transparent;
 }
 html.dark .report-body pre[class*="shiki"],
 html.dark .report-body pre[class*="shiki"] code,
 html.dark .report-body pre[class*="shiki"] span {
   color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg);
+  background-color: transparent;
 }
 
 /* ---- Math (KaTeX) ---- */
