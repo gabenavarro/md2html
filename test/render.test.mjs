@@ -54,6 +54,13 @@ test("Shiki: dual-theme pre, language class, no language-mermaid leak", async ()
   assert.ok(!r.html.includes("language-mermaid"), "mermaid not highlighted");
 });
 
+test("unregistered fence language -> plaintext fallback, no crash", async () => {
+  const p = writeReport("make.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`make\nall: build\n\techo hi\n\`\`\`\n`);
+  const r = await render(p);
+  assert.ok(r.html.includes('class="shiki'), "make fence highlighted via Shiki");
+  assert.ok(r.html.includes("all: build"), "make source present");
+});
+
 test("Mermaid block -> data-src div, not highlighted code", async () => {
   const p = writeReport("mm.md", `# T\n\n## A\n\n## B\n\n## C\n\n\`\`\`mermaid\nflowchart LR\n  A --> B\n\`\`\`\n`);
   const r = await render(p);
