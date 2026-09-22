@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -260,6 +261,38 @@ test("XY failure: named chart + traceback tail, not raw command", async () => {
       !/--manifest/.test(e.message),
     "surfaces chart name + traceback, hides subprocess plumbing",
   );
+});
+
+test("no date in frontmatter -> no wall-clock stamp, deterministic output", async () => {
+  const p = writeReport("nodate.md", `# T\n\n## A\n\n## B\n\n## C\n\nplain\n`);
+  const r1 = await render(p);
+  const r2 = await render(p);
+  assert.equal(r1.html, r2.html, "identical across renders");
+  assert.ok(!/footer-date/.test(r1.html), "no footer date span");
+  assert.ok(!/20\d\d-\d\d-\d\d/.test(r1.html), "no date string anywhere");
+});
+
+test("frontmatter date still rendered in footer", async () => {
+  const p = writeReport("date2.md", `---\ndate: 2026-01-02\n---\n# T\n\n## A\n\n## B\n\n## C\n`);
+  const r = await render(p);
+  assert.ok(r.html.includes('class="footer-date">2026-01-02'), "explicit date kept");
+});
+
+test("CLI: --help exits 0, --version prints version, dir mode skips README.md", () => {
+  const bin = join(import.meta.dirname, "..", "bin", "md2html.mjs");
+  const help = execFileSync("node", [bin, "--help"], { encoding: "utf8" });
+  assert.ok(help.includes("Usage:"), "help text");
+  const ver = execFileSync("node", [bin, "--version"], { encoding: "utf8" });
+  assert.match(ver.trim(), /^md2html \d+\.\d+\.\d+$/, "version line");
+  const d = mkdtempSync(join(tmpdir(), "md2html-dir-"));
+  writeFileSync(join(d, "README.md"), "# R\n\n## A\n\n## B\n\n## C\n");
+  writeFileSync(join(d, "report.md"), "# R\n\n## A\n\n## B\n\n## C\n");
+  const out = execFileSync("node", [bin, d], { encoding: "utf8" });
+  assert.ok(out.includes("report.md"), "report rendered");
+  assert.ok(!out.includes("README.md"), "README skipped");
+  assert.ok(!existsSync(join(d, "README.html")), "no README.html");
+  assert.ok(existsSync(join(d, "report.html")), "report.html exists");
+  rmSync(d, { recursive: true, force: true });
 });
 
 process.on("exit", () => rmSync(dir, { recursive: true, force: true }));
